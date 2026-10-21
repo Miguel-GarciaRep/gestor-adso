@@ -1,32 +1,35 @@
 <?php
+
 namespace App\Http\Controllers;
+
+use App\Models\Aprendiz;
 use Illuminate\Http\Request;
+
 class AprendizController extends Controller
 {
- public function index()
- {
- // Semana 2: sin BD; solo devolvemos la vista
- return view('aprendices.index');
- }
- public function create()
- {
- return view('aprendices.create');
- }
- public function store(Request $request)
- {
- // Validación mínima (simulación de guardado)
- $data = $request->validate([
- 'nombre' => ['required','string','max:120'],
- 'documento' => ['required','string','max:40'],
- 'correo' => ['required','email','max:120'],
- ]);
- // Aquí NO guardamos en BD (lo haremos en Semana 4 con Eloquent).
- // Objetivo Semana 2: comprobar flujo ruta ³ acción ³ vista ³ redirect.
- return redirect()->route('aprendices.index')
- ->with('ok','Aprendiz recibido (simulado)');
- }
- public function show($id) { abort(404); } // no usado en S2
- public function edit($id) { abort(404); } // no usado en S2
- public function update(Request $r, $id) { abort(404); } // no usado en S2
- public function destroy($id) { abort(404); } // no usado en S2
+    public function index()
+    {
+        $aprendices = Aprendiz::latest('id')->paginate(10);
+
+        return view('aprendices.index', compact('aprendices'));
+    }
+
+    public function create()
+    {
+        return view('aprendices.create');
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:120'],
+            'documento' => ['required', 'string', 'max:40', 'unique:aprendices,documento'],
+            'correo' => ['required', 'email', 'max:120', 'unique:aprendices,correo'],
+            'ficha_id' => ['nullable', 'integer', 'exists:fichas,id'],
+        ]);
+
+        Aprendiz::create($data);
+
+        return redirect()->route('aprendices.index')->with('ok', 'Aprendiz creado');
+    }
 }
